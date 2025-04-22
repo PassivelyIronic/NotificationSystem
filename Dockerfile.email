@@ -1,7 +1,8 @@
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
 COPY ["NotificationSystem.EmailWorker/NotificationSystem.EmailWorker.csproj", "NotificationSystem.EmailWorker/"]
-COPY ["NotificationSystem.Core/NotificationSystem.Core.csproj", "NotificationSystem.Core/"]
+COPY ["NotificationSystem.Domain/NotificationSystem.Domain.csproj", "NotificationSystem.Domain/"]
+COPY ["NotificationSystem.Infrastructure/NotificationSystem.Infrastructure.csproj", "NotificationSystem.Infrastructure/"]
 RUN dotnet restore "NotificationSystem.EmailWorker/NotificationSystem.EmailWorker.csproj"
 COPY . .
 WORKDIR "/src/NotificationSystem.EmailWorker"

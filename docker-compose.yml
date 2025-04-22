@@ -1,4 +1,14 @@
 services:
+  mongodb:
+    image: mongo:latest
+    ports:
+      - "27017:27017"
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=root
+      - MONGO_INITDB_ROOT_PASSWORD=example
+    volumes:
+      - mongodb_data:/data/db
+
   rabbitmq:
     image: rabbitmq:3-management
     ports:
@@ -7,71 +17,47 @@ services:
     environment:
       - RABBITMQ_DEFAULT_USER=guest
       - RABBITMQ_DEFAULT_PASS=guest
-    networks:
-      - notification-network
-
-  mongo:
-    image: mongo:latest
-    ports:
-      - "27017:27017"
-    environment:
-      - MONGO_INITDB_ROOT_USERNAME=root
-      - MONGO_INITDB_ROOT_PASSWORD=example
-      - MONGO_INITDB_DATABASE=notification_manager
     volumes:
-      - mongodb_data:/data/db
-    networks:
-      - notification-network
+      - rabbitmq_data:/var/lib/rabbitmq
 
   api:
     build:
-      context: ./NotificationSystem.Api
+      context: .
       dockerfile: Dockerfile.api
     ports:
       - "5000:80"
-    depends_on:
-      - rabbitmq
-      - mongo
     environment:
-      - ASPNETCORE_ENVIRONMENT=Development
-      - ConnectionStrings__MongoDB=mongodb://root:example@mongo:27017/notification_manager?authSource=admin
+      - MongoDbSettings__ConnectionString=mongodb://root:example@mongodb:27017
+      - MongoDbSettings__DatabaseName=NotificationSystem
       - RabbitMQ__Host=rabbitmq
-      - RabbitMQ__Username=guest
-      - RabbitMQ__Password=guest
-    networks:
-      - notification-network
-
-  push-worker:
-    build:
-      context: ./NotificationSystem.PushWorker
-      dockerfile: Dockerfile.push
     depends_on:
+      - mongodb
       - rabbitmq
-    environment:
-      - DOTNET_ENVIRONMENT=Development
-      - RabbitMQ__Host=rabbitmq
-      - RabbitMQ__Username=guest
-      - RabbitMQ__Password=guest
-    networks:
-      - notification-network
 
   email-worker:
     build:
-      context: ./NotificationSystem.EmailWorker
+      context: .
       dockerfile: Dockerfile.email
-    depends_on:
-      - rabbitmq
     environment:
-      - DOTNET_ENVIRONMENT=Development
+      - MongoDbSettings__ConnectionString=mongodb://root:example@mongodb:27017
+      - MongoDbSettings__DatabaseName=NotificationSystem
       - RabbitMQ__Host=rabbitmq
-      - RabbitMQ__Username=guest
-      - RabbitMQ__Password=guest
-    networks:
-      - notification-network
+    depends_on:
+      - mongodb
+      - rabbitmq
+
+  push-worker:
+    build:
+      context: .
+      dockerfile: Dockerfile.push
+    environment:
+      - MongoDbSettings__ConnectionString=mongodb://root:example@mongodb:27017
+      - MongoDbSettings__DatabaseName=NotificationSystem
+      - RabbitMQ__Host=rabbitmq
+    depends_on:
+      - mongodb
+      - rabbitmq
 
 volumes:
   mongodb_data:
-
-networks:
-  notification-network:
-    driver: bridge
+  rabbitmq_data:

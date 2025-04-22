@@ -1,7 +1,8 @@
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
 COPY ["NotificationSystem.PushWorker/NotificationSystem.PushWorker.csproj", "NotificationSystem.PushWorker/"]
-COPY ["NotificationSystem.Core/NotificationSystem.Core.csproj", "NotificationSystem.Core/"]
+COPY ["NotificationSystem.Domain/NotificationSystem.Domain.csproj", "NotificationSystem.Domain/"]
+COPY ["NotificationSystem.Infrastructure/NotificationSystem.Infrastructure.csproj", "NotificationSystem.Infrastructure/"]
 RUN dotnet restore "NotificationSystem.PushWorker/NotificationSystem.PushWorker.csproj"
 COPY . .
 WORKDIR "/src/NotificationSystem.PushWorker"
