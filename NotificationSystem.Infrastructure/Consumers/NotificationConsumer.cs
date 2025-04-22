@@ -38,19 +38,34 @@ namespace NotificationSystem.Infrastructure.Consumers
             // Simulate 50% chance of success
             if (_random.NextDouble() < 0.5)
             {
-                Console.WriteLine($"Notification delivery attempt {notification.AttemptCount} failed");
+                Console.WriteLine($"Notification delivery attempt {notification.AttemptCount} failed for ID: {notification.Id}");
 
                 if (notification.AttemptCount >= 3)
                 {
+                    Console.WriteLine($"Notification failed after 3 attempts for ID: {notification.Id}");
                     notification.Status = "Failed";
                     await _repository.UpdateAsync(notification);
                     return;
                 }
 
                 // Retry after 5 seconds
-                await context.Defer(TimeSpan.FromSeconds(5));
+                await Task.Delay(5000);
+
+                // We'll reschedule the notification for retry
+                await _bus.Publish<ISendNotification>(new SendNotificationCommand
+                {
+                    Id = notification.Id,
+                    Content = notification.Content,
+                    Channel = notification.Channel,
+                    Recipient = notification.Recipient,
+                    Timezone = notification.Timezone,
+                    ScheduledAt = notification.ScheduledAt
+                });
+
                 return;
             }
+
+            Console.WriteLine($"Processing notification for channel {notification.Channel}, ID: {notification.Id}");
 
             // Process based on channel
             if (string.Equals(notification.Channel, "push", StringComparison.OrdinalIgnoreCase))
@@ -74,6 +89,7 @@ namespace NotificationSystem.Infrastructure.Consumers
 
             notification.Status = "Sent";
             await _repository.UpdateAsync(notification);
+            Console.WriteLine($"Notification {notification.Id} marked as sent");
         }
     }
 }
