@@ -13,15 +13,16 @@ namespace NotificationSystem.Infrastructure.Services
 {
     public class NotificationService
     {
+        // In NotificationService.cs
         private readonly INotificationRepository _repository;
-        private readonly IBus _bus;
+        private readonly IMessageScheduler _scheduler;
         private const int AllowedHoursStart = 8;
         private const int AllowedHoursEnd = 22;
 
-        public NotificationService(INotificationRepository repository, IBus bus)
+        public NotificationService(INotificationRepository repository, IMessageScheduler scheduler)
         {
             _repository = repository;
-            _bus = bus;
+            _scheduler = scheduler;
         }
 
         public async Task<Notification> CreateNotificationAsync(NotificationDto notificationDto)
@@ -72,7 +73,7 @@ namespace NotificationSystem.Infrastructure.Services
             await _repository.CreateAsync(notification);
 
             // Schedule notification delivery
-            await _bus.ScheduleSend<ISendNotification>(
+            await _scheduler.ScheduleSend(
                 new Uri($"queue:send-notification"),
                 utcScheduledTime,
                 new SendNotificationCommand
@@ -108,7 +109,9 @@ namespace NotificationSystem.Infrastructure.Services
             await _repository.UpdateAsync(notification);
 
             // Send immediately
-            await _bus.Send<ISendNotification>(
+            await _scheduler.ScheduleSend<ISendNotification>(
+                new Uri($"queue:send-notification"),
+                notification.ScheduledAt,
                 new SendNotificationCommand
                 {
                     Id = notification.Id,

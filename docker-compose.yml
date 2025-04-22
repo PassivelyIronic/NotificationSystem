@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   rabbitmq:
     image: rabbitmq:3-management
@@ -17,9 +15,9 @@ services:
     ports:
       - "27017:27017"
     environment:
-      MONGO_INITDB_ROOT_USERNAME: root
-      MONGO_INITDB_ROOT_PASSWORD: example
-      MONGO_INITDB_DATABASE: notification_manager
+      - MONGO_INITDB_ROOT_USERNAME=root
+      - MONGO_INITDB_ROOT_PASSWORD=example
+      - MONGO_INITDB_DATABASE=notification_manager
     volumes:
       - mongodb_data:/data/db
     networks:
@@ -27,7 +25,7 @@ services:
 
   api:
     build:
-      context: .
+      context: ./NotificationSystem.Api
       dockerfile: Dockerfile.api
     ports:
       - "5000:80"
@@ -45,7 +43,7 @@ services:
 
   push-worker:
     build:
-      context: .
+      context: ./NotificationSystem.PushWorker
       dockerfile: Dockerfile.push
     depends_on:
       - rabbitmq
@@ -59,7 +57,7 @@ services:
 
   email-worker:
     build:
-      context: .
+      context: ./NotificationSystem.EmailWorker
       dockerfile: Dockerfile.email
     depends_on:
       - rabbitmq

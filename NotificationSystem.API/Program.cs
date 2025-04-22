@@ -29,12 +29,18 @@ builder.Services.AddSingleton<IMongoDatabase>(sp =>
 
 // Register repositories and services
 builder.Services.AddSingleton<INotificationRepository, MongoNotificationRepository>();
-builder.Services.AddSingleton<NotificationService>();
+builder.Services.AddScoped<NotificationService>();
+//builder.Services.AddScoped<INotificationService, NotificationService>();
 
+
+// Configure MassTransit with RabbitMQ
 // Configure MassTransit with RabbitMQ
 builder.Services.AddMassTransit(x =>
 {
     x.AddConsumer<SendNotificationConsumer>();
+
+    // Add this line to register the message scheduler
+    x.AddMessageScheduler(new Uri("rabbitmq://rabbitmq/quartz"));
 
     x.UsingRabbitMq((context, cfg) =>
     {
@@ -43,6 +49,9 @@ builder.Services.AddMassTransit(x =>
             h.Username(builder.Configuration["RabbitMQ:Username"]);
             h.Password(builder.Configuration["RabbitMQ:Password"]);
         });
+
+        // Configure the message scheduler endpoint
+        cfg.UseMessageScheduler(new Uri("rabbitmq://rabbitmq/quartz"));
 
         cfg.ConfigureEndpoints(context);
     });
