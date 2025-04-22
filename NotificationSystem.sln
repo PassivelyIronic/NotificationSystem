@@ -19,7 +19,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Elementy rozwiązania", "El
 		Dockerfile.api = Dockerfile.api
 		Dockerfile.email = Dockerfile.email
 		Dockerfile.push = Dockerfile.push
-		Dockerfile.txt = Dockerfile.txt
 	EndProjectSection
 EndProject
 Global
