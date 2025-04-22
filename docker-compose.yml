@@ -1,0 +1,79 @@
+version: '3.8'
+
+services:
+  rabbitmq:
+    image: rabbitmq:3-management
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      - RABBITMQ_DEFAULT_USER=guest
+      - RABBITMQ_DEFAULT_PASS=guest
+    networks:
+      - notification-network
+
+  mongo:
+    image: mongo:latest
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: example
+      MONGO_INITDB_DATABASE: notification_manager
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - notification-network
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+    ports:
+      - "5000:80"
+    depends_on:
+      - rabbitmq
+      - mongo
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__MongoDB=mongodb://root:example@mongo:27017/notification_manager?authSource=admin
+      - RabbitMQ__Host=rabbitmq
+      - RabbitMQ__Username=guest
+      - RabbitMQ__Password=guest
+    networks:
+      - notification-network
+
+  push-worker:
+    build:
+      context: .
+      dockerfile: Dockerfile.push
+    depends_on:
+      - rabbitmq
+    environment:
+      - DOTNET_ENVIRONMENT=Development
+      - RabbitMQ__Host=rabbitmq
+      - RabbitMQ__Username=guest
+      - RabbitMQ__Password=guest
+    networks:
+      - notification-network
+
+  email-worker:
+    build:
+      context: .
+      dockerfile: Dockerfile.email
+    depends_on:
+      - rabbitmq
+    environment:
+      - DOTNET_ENVIRONMENT=Development
+      - RabbitMQ__Host=rabbitmq
+      - RabbitMQ__Username=guest
+      - RabbitMQ__Password=guest
+    networks:
+      - notification-network
+
+volumes:
+  mongodb_data:
+
+networks:
+  notification-network:
+    driver: bridge
