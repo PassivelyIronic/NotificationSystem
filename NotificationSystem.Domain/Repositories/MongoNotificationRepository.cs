@@ -53,5 +53,10 @@ namespace NotificationSystem.Infrastructure.Repositories
             return await _notifications.Find(n => n.Status == status)
                 .ToListAsync();
         }
+
+        public async Task<IEnumerable<Notification>> GetAllAsync()
+        {
+            return await _notifications.Find(_ => true).ToListAsync();
+        }
     }
 }

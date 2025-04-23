@@ -4,8 +4,7 @@ services:
     ports:
       - "27017:27017"
     environment:
-      - MONGO_INITDB_ROOT_USERNAME=root
-      - MONGO_INITDB_ROOT_PASSWORD=example
+      - MONGO_INITDB_DATABASE=notification_manager
     volumes:
       - mongodb_data:/data/db
 
@@ -27,9 +26,11 @@ services:
     ports:
       - "5000:80"
     environment:
-      - MongoDbSettings__ConnectionString=mongodb://root:example@mongodb:27017
-      - MongoDbSettings__DatabaseName=NotificationSystem
+      - ConnectionStrings__MongoDB=mongodb://mongodb:27017
+      - MongoDB__DatabaseName=notification_manager
       - RabbitMQ__Host=rabbitmq
+      - RabbitMQ__Username=guest
+      - RabbitMQ__Password=guest
     depends_on:
       - mongodb
       - rabbitmq
@@ -39,9 +40,11 @@ services:
       context: .
       dockerfile: Dockerfile.email
     environment:
-      - MongoDbSettings__ConnectionString=mongodb://root:example@mongodb:27017
-      - MongoDbSettings__DatabaseName=NotificationSystem
+      - ConnectionStrings__MongoDB=mongodb://mongodb:27017
+      - MongoDB__DatabaseName=notification_manager
       - RabbitMQ__Host=rabbitmq
+      - RabbitMQ__Username=guest
+      - RabbitMQ__Password=guest
     depends_on:
       - mongodb
       - rabbitmq
@@ -51,9 +54,11 @@ services:
       context: .
       dockerfile: Dockerfile.push
     environment:
-      - MongoDbSettings__ConnectionString=mongodb://root:example@mongodb:27017
-      - MongoDbSettings__DatabaseName=NotificationSystem
+      - ConnectionStrings__MongoDB=mongodb://mongodb:27017
+      - MongoDB__DatabaseName=notification_manager
       - RabbitMQ__Host=rabbitmq
+      - RabbitMQ__Username=guest
+      - RabbitMQ__Password=guest
     depends_on:
       - mongodb
       - rabbitmq

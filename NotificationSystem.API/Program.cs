@@ -1,6 +1,7 @@
 using MassTransit;
 using Microsoft.Extensions.Options;
 using MongoDB.Driver;
+using NotificationSystem.API.Services;
 using NotificationSystem.Domain.Repositories;
 using NotificationSystem.Infrastructure.Consumers;
 using NotificationSystem.Infrastructure.Repositories;
@@ -8,12 +9,10 @@ using NotificationSystem.Infrastructure.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-// Configure MongoDB
 builder.Services.AddSingleton<IMongoClient>(sp =>
 {
     var connectionString = builder.Configuration.GetConnectionString("MongoDB");
@@ -27,19 +26,16 @@ builder.Services.AddSingleton<IMongoDatabase>(sp =>
     return client.GetDatabase(databaseName);
 });
 
-// Register repositories and services
 builder.Services.AddSingleton<INotificationRepository, MongoNotificationRepository>();
 builder.Services.AddScoped<NotificationService>();
 //builder.Services.AddScoped<INotificationService, NotificationService>();
 
+builder.Services.AddHostedService<NotificationProcessingService>();
 
-// Configure MassTransit with RabbitMQ
-// Configure MassTransit with RabbitMQ
 builder.Services.AddMassTransit(x =>
 {
     x.AddConsumer<SendNotificationConsumer>();
 
-    // Add this line to register the message scheduler
     x.AddMessageScheduler(new Uri("rabbitmq://rabbitmq/quartz"));
 
     x.UsingRabbitMq((context, cfg) =>
@@ -50,7 +46,6 @@ builder.Services.AddMassTransit(x =>
             h.Password(builder.Configuration["RabbitMQ:Password"]);
         });
 
-        // Configure the message scheduler endpoint
         cfg.UseMessageScheduler(new Uri("rabbitmq://rabbitmq/quartz"));
 
         cfg.ConfigureEndpoints(context);
@@ -59,7 +54,6 @@ builder.Services.AddMassTransit(x =>
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();

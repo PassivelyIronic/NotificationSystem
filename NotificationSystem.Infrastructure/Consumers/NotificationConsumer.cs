@@ -27,7 +27,6 @@ namespace NotificationSystem.Infrastructure.Consumers
 
             if (notification == null)
             {
-                // Notification might have been deleted
                 return;
             }
 
@@ -35,7 +34,6 @@ namespace NotificationSystem.Infrastructure.Consumers
             notification.AttemptCount++;
             await _repository.UpdateAsync(notification);
 
-            // Simulate 50% chance of success
             if (_random.NextDouble() < 0.5)
             {
                 Console.WriteLine($"Notification delivery attempt {notification.AttemptCount} failed for ID: {notification.Id}");
@@ -48,10 +46,8 @@ namespace NotificationSystem.Infrastructure.Consumers
                     return;
                 }
 
-                // Retry after 5 seconds
                 await Task.Delay(5000);
 
-                // We'll reschedule the notification for retry
                 await _bus.Publish<ISendNotification>(new SendNotificationCommand
                 {
                     Id = notification.Id,
@@ -67,7 +63,6 @@ namespace NotificationSystem.Infrastructure.Consumers
 
             Console.WriteLine($"Processing notification for channel {notification.Channel}, ID: {notification.Id}");
 
-            // Process based on channel
             if (string.Equals(notification.Channel, "push", StringComparison.OrdinalIgnoreCase))
             {
                 await _bus.Send(new SendPushNotificationCommand

@@ -13,7 +13,6 @@ namespace NotificationSystem.Infrastructure.Services
 {
     public class NotificationService
     {
-        // In NotificationService.cs
         private readonly INotificationRepository _repository;
         private readonly IMessageScheduler _scheduler;
         private const int AllowedHoursStart = 8;
@@ -27,7 +26,6 @@ namespace NotificationSystem.Infrastructure.Services
 
         public async Task<Notification> CreateNotificationAsync(NotificationDto notificationDto)
         {
-            // Validate timezone
             try
             {
                 var timeZoneInfo = TimeZoneInfo.FindSystemTimeZoneById(notificationDto.Timezone);
@@ -45,20 +43,17 @@ namespace NotificationSystem.Infrastructure.Services
                 throw new ArgumentException("Scheduled time must be in the future");
             }
 
-            // Check if the local scheduled time is within allowed hours
             var timeZone = TimeZoneInfo.FindSystemTimeZoneById(notificationDto.Timezone);
             var localScheduledTime = TimeZoneInfo.ConvertTimeFromUtc(utcScheduledTime, timeZone);
 
             if (localScheduledTime.Hour < AllowedHoursStart || localScheduledTime.Hour >= AllowedHoursEnd)
             {
-                // Adjust to next day's allowed start time
                 var nextDay = localScheduledTime.Date.AddDays(1);
                 localScheduledTime = new DateTime(nextDay.Year, nextDay.Month, nextDay.Day, AllowedHoursStart, 0, 0);
                 utcScheduledTime = TimeZoneInfo.ConvertTimeToUtc(localScheduledTime, timeZone);
                 Console.WriteLine($"Adjusted scheduled time due to quiet hours: {utcScheduledTime}");
             }
 
-            // Create notification record
             var notification = new Notification
             {
                 Id = Guid.NewGuid().ToString(),
@@ -72,7 +67,6 @@ namespace NotificationSystem.Infrastructure.Services
 
             await _repository.CreateAsync(notification);
 
-            // Schedule notification delivery
             await _scheduler.ScheduleSend(
                 new Uri($"queue:send-notification"),
                 utcScheduledTime,
@@ -108,7 +102,6 @@ namespace NotificationSystem.Infrastructure.Services
             notification.ScheduledAt = DateTime.UtcNow;
             await _repository.UpdateAsync(notification);
 
-            // Send immediately
             await _scheduler.ScheduleSend<ISendNotification>(
                 new Uri($"queue:send-notification"),
                 notification.ScheduledAt,
@@ -129,7 +122,7 @@ namespace NotificationSystem.Infrastructure.Services
     public class NotificationDto
     {
         public string Content { get; set; } = null!;
-        public string Channel { get; set; } = null!;  // "push" or "email"
+        public string Channel { get; set; } = null!;
         public string Recipient { get; set; } = null!;
         public string Timezone { get; set; } = null!;
         public DateTime ScheduledAt { get; set; }

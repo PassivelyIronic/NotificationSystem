@@ -15,5 +15,6 @@ namespace NotificationSystem.Domain.Repositories
         Task<bool> DeleteAsync(string id);
         Task<IEnumerable<Notification>> GetAllPendingAsync();
         Task<IEnumerable<Notification>> GetByStatusAsync(string status);
+        Task<IEnumerable<Notification>> GetAllAsync();
     }
 }

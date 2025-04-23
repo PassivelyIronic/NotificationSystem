@@ -19,7 +19,6 @@ builder.Services.AddMassTransit(x =>
 
         cfg.ReceiveEndpoint("push-notifications", e =>
         {
-            // Configure consumer with only one concurrent message
             e.PrefetchCount = 1;
             e.ConfigureConsumer<PushNotificationConsumer>(context);
         });
@@ -36,11 +35,8 @@ public class PushNotificationConsumer : IConsumer<SendPushNotificationCommand>
     public async Task Consume(ConsumeContext<SendPushNotificationCommand> context)
     {
         Console.WriteLine($"Processing push notification to {context.Message.Recipient}: {context.Message.Content}");
-
-        // Simulate processing time
         await Task.Delay(500);
 
-        // Simulate 50% chance of success
         if (_random.NextDouble() < 0.5)
         {
             Console.WriteLine($"Successfully sent push notification to {context.Message.Recipient}");

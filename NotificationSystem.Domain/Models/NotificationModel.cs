@@ -10,7 +10,7 @@ namespace NotificationSystem.Domain.Models
     {
         public string Id { get; set; } = null!;
         public string Content { get; set; } = null!;
-        public string Channel { get; set; } = null!;  // "push" or "email"
+        public string Channel { get; set; } = null!;
         public string Recipient { get; set; } = null!;
         public string Timezone { get; set; } = null!;
         public DateTime ScheduledAt { get; set; }

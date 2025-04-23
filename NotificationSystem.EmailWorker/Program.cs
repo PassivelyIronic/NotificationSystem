@@ -19,7 +19,6 @@ builder.Services.AddMassTransit(x =>
 
         cfg.ReceiveEndpoint("email-notifications", e =>
         {
-            // Configure consumer with only one concurrent message
             e.PrefetchCount = 1;
             e.ConfigureConsumer<EmailNotificationConsumer>(context);
         });
@@ -37,10 +36,8 @@ public class EmailNotificationConsumer : IConsumer<SendEmailNotificationCommand>
     {
         Console.WriteLine($"Processing email notification to {context.Message.Recipient}: {context.Message.Content}");
 
-        // Simulate processing time
         await Task.Delay(1000);
 
-        // Simulate 50% chance of success
         if (_random.NextDouble() < 0.5)
         {
             Console.WriteLine($"Successfully sent email notification to {context.Message.Recipient}");
